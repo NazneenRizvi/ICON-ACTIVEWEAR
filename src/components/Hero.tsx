@@ -25,7 +25,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick }) => {
           <div className="md:col-span-7 flex justify-center md:justify-start order-2 md:order-1">
             <div className="relative w-full max-w-[580px] aspect-[16/10] sm:aspect-[16/9] md:aspect-[4/3] rounded-sm overflow-hidden shadow-sm group">
               <img
-                src="/src/assets/images/hero_pink_activewear_1790852235638.jpg"
+                src="/images/hero_pink_activewear_1790852235638.jpg"
                 alt="Fitness model in pink ribbed tank and seamless leggings"
                 className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
