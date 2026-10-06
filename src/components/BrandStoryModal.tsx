@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X, ShieldCheck, Zap, HeartHandshake, CheckCircle } from 'lucide-react';
 
 interface BrandStoryModalProps {
@@ -7,11 +7,53 @@ interface BrandStoryModalProps {
 }
 
 export const BrandStoryModal: React.FC<BrandStoryModalProps> = ({ isOpen, onClose }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside the modal content area
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
-      <div className="relative bg-white w-full max-w-2xl rounded-none shadow-2xl border border-neutral-200 p-6 sm:p-10">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+    >
+      <div
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+        className="relative bg-white w-full max-w-2xl rounded-none shadow-2xl border border-neutral-200 p-6 sm:p-10"
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-black transition-colors"

@@ -44,7 +44,7 @@ export const CampaignBanner: React.FC<CampaignBannerProps> = ({ onShopClick }) =
           <div className="md:col-span-6 flex justify-center md:justify-end relative">
             <div className="relative w-full max-w-[500px] aspect-[16/10] sm:aspect-[4/3] rounded-sm overflow-hidden border border-neutral-800">
               <img
-                src="/src/assets/images/campaign_dark_fitness_1790852253184.jpg"
+                src="/images/campaign_dark_fitness_1790852253184.jpg"
                 alt="Fitness athlete in white sports bra in gym lighting"
                 className="w-full h-full object-cover object-center"
                 referrerPolicy="no-referrer"

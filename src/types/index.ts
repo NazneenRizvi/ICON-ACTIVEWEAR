@@ -81,11 +81,52 @@ export interface Order {
   notes?: string;
 }
 
+export interface Coupon {
+  code: string;
+  discountPercent: number;
+  description: string;
+  minSpendUsd?: number;
+  isActive: boolean;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  title: string;
+  comment: string;
+  date: string;
+  isVerified: boolean;
+}
+
+export interface CategoryItem {
+  id: string;
+  name: string;
+  slug: ProductCategory;
+  description: string;
+  image: string;
+  productCount: number;
+}
+
+export interface HeroSlide {
+  id: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  features: string[];
+  image: string;
+  ctaText: string;
+  categoryLink: string;
+}
+
 export interface StoreSettings {
   ownerName: string;
   ownerEmail: string;
   ownerWhatsApp: string;
   currencyDefault: string;
+  announcementText?: string;
+  siteName?: string;
 }
 
 export interface CurrencyConfig {

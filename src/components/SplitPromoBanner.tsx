@@ -23,7 +23,7 @@ export const SplitPromoBanner: React.FC<SplitPromoBannerProps> = ({ onCategorySe
         {/* Left Banner: SHOP BOTTOMS matching reference */}
         <div className="relative group overflow-hidden bg-neutral-100 border border-neutral-200 aspect-[16/10] sm:aspect-[16/9] flex items-center">
           <img
-            src="/src/assets/images/promo_split_bottoms_1790852297885.jpg"
+            src="/images/promo_split_bottoms_1790852297885.jpg"
             alt="Fitness athlete stretching in athletic bottoms"
             className="absolute inset-0 w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
             referrerPolicy="no-referrer"
@@ -52,7 +52,7 @@ export const SplitPromoBanner: React.FC<SplitPromoBannerProps> = ({ onCategorySe
         {/* Right Banner: SHOP MUST HAVES matching reference */}
         <div className="relative group overflow-hidden bg-neutral-900 border border-neutral-800 aspect-[16/10] sm:aspect-[16/9] flex items-center">
           <img
-            src="/src/assets/images/campaign_dark_fitness_1790852253184.jpg"
+            src="/images/campaign_dark_fitness_1790852253184.jpg"
             alt="Athlete in gym training gear"
             className="absolute inset-0 w-full h-full object-cover object-right transform transition-transform duration-700 group-hover:scale-105 opacity-80"
             referrerPolicy="no-referrer"

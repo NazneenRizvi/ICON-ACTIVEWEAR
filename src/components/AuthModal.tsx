@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Lock, Mail, User as UserIcon, ArrowRight, Check, Crown } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Lock, Mail, User as UserIcon, ArrowRight, Check, Crown, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { STORE_OWNER_CONFIG, STORE_OWNER_EMAIL } from '../config';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, closeAuthModal, authModalMode, login, register } = useAuth();
@@ -11,9 +12,45 @@ export const AuthModal: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Close modal when clicking outside the modal content area
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        closeAuthModal();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isAuthModalOpen, closeAuthModal]);
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeAuthModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthModalOpen, closeAuthModal]);
 
   if (!isAuthModalOpen) return null;
 
@@ -60,8 +97,8 @@ export const AuthModal: React.FC = () => {
 
   const handleLoginAsOwner = async () => {
     setIsLoading(true);
-    await login('nazneenrizvi1711@gmail.com', 'admin0742', 'Nazneen (Store Owner)');
-    setSuccess('Welcome back Nazneen! Store Owner access activated.');
+    await login(STORE_OWNER_EMAIL, 'admin0742', STORE_OWNER_CONFIG.name);
+    setSuccess(`Welcome back! Store Owner access activated.`);
     setTimeout(() => {
       closeAuthModal();
     }, 800);
@@ -69,8 +106,15 @@ export const AuthModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div className="relative bg-white w-full max-w-md p-6 sm:p-8 rounded-none shadow-2xl border border-neutral-200">
+    <div
+      onClick={closeAuthModal}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+    >
+      <div
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+        className="relative bg-white w-full max-w-md p-6 sm:p-8 rounded-none shadow-2xl border border-neutral-200"
+      >
         <button
           onClick={closeAuthModal}
           className="absolute top-4 right-4 p-1 text-neutral-400 hover:text-black transition-colors"
@@ -180,8 +224,8 @@ export const AuthModal: React.FC = () => {
               {mode === 'login' && (
                 <button
                   type="button"
-                  onClick={() => alert('Password reset link sent to registered email.')}
-                  className="text-[10px] text-neutral-500 hover:text-black underline"
+                  onClick={() => setSuccess('Password reset link sent to registered email.')}
+                  className="text-[10px] text-neutral-500 hover:text-black underline cursor-pointer"
                 >
                   Forgot?
                 </button>
@@ -189,14 +233,27 @@ export const AuthModal: React.FC = () => {
             </div>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 text-xs border border-neutral-300 focus:border-black focus:outline-hidden"
+                className="w-full pl-9 pr-10 py-2 text-xs border border-neutral-300 focus:border-black focus:outline-hidden"
               />
               <Lock className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-2.5" />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer focus:outline-hidden"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -210,20 +267,16 @@ export const AuthModal: React.FC = () => {
           </button>
         </form>
 
-        {/* Fast Store Owner Access */}
-        <div className="mt-5 pt-4 border-t border-neutral-100 space-y-2.5">
-          <button
-            type="button"
-            onClick={handleLoginAsOwner}
-            className="w-full py-2.5 bg-neutral-950 hover:bg-black text-amber-300 text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition-all border border-neutral-800"
-          >
-            <Crown className="w-3.5 h-3.5 text-amber-400" />
-            <span>Sign In as Store Owner (Nazneen)</span>
-          </button>
-
-          <p className="text-[10px] text-neutral-400 text-center">
-            Or register / sign in with email: <span className="text-neutral-700 font-mono">nazneenrizvi1711@gmail.com</span>
+        {/* Customer Account Benefits */}
+        <div className="mt-5 pt-4 border-t border-neutral-100 space-y-2 text-[11px] text-neutral-500">
+          <p className="font-semibold text-neutral-800 uppercase tracking-wider text-[10px]">
+            Member Account Privileges:
           </p>
+          <div className="grid grid-cols-1 gap-1 text-neutral-600">
+            <span className="flex items-center gap-1.5">✓ Live shipment & delivery tracking</span>
+            <span className="flex items-center gap-1.5">✓ View complete past order history & receipts</span>
+            <span className="flex items-center gap-1.5">✓ Faster checkout with saved delivery address</span>
+          </div>
         </div>
       </div>
     </div>

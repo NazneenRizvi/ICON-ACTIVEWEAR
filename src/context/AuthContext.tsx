@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
+import { STORE_OWNER_EMAIL, STORE_OWNER_CONFIG } from '../config';
 
 interface AuthContextType {
   user: User | null;
@@ -43,21 +44,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthModalOpen(false);
   };
 
-  const isOwner = !!user && (
-    user.email?.toLowerCase().trim() === 'nazneenrizvi1711@gmail.com' ||
-    user.isOwner === true ||
-    user.role === 'owner'
-  );
+  const isOwner = !!user && user.email?.toLowerCase().trim() === STORE_OWNER_EMAIL.toLowerCase().trim();
 
   const login = async (email: string, password: string, name?: string) => {
     // Quick validation
     if (!email || !password) {
       return { success: false, message: 'Please enter valid email and password' };
     }
-    const isOwnerUser = email.toLowerCase().trim() === 'nazneenrizvi1711@gmail.com' || email.toLowerCase().includes('nazneen');
+    const isOwnerUser = email.toLowerCase().trim() === STORE_OWNER_EMAIL.toLowerCase().trim();
     const simulatedUser: User = {
       id: `usr_${Date.now()}`,
-      name: name || (isOwnerUser ? 'Nazneen (Store Owner)' : email.split('@')[0].replace(/[._]/g, ' ')),
+      name: name || (isOwnerUser ? STORE_OWNER_CONFIG.name : email.split('@')[0].replace(/[._]/g, ' ')),
       email,
       role: isOwnerUser ? 'owner' : 'customer',
       isOwner: isOwnerUser,

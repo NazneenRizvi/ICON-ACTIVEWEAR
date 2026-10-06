@@ -9,11 +9,10 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick }) => {
   const handleScrollToShop = () => {
     if (onShopClick) {
       onShopClick();
-    } else {
-      const el = document.getElementById('shop-seamless');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
+    }
+    const el = document.getElementById('catalog-section') || document.getElementById('shop-seamless');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 

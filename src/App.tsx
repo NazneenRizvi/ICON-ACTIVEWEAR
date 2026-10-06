@@ -1,71 +1,155 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { FeaturedCategories } from './components/FeaturedCategories';
+import { TrustMarquee } from './components/TrustMarquee';
+import { SocialFeed } from './components/SocialFeed';
 import { ProductCard } from './components/ProductCard';
 import { CampaignBanner } from './components/CampaignBanner';
 import { SplitPromoBanner } from './components/SplitPromoBanner';
 import { ReviewsSection } from './components/ReviewsSection';
 import { Footer } from './components/Footer';
 import { ProductDetailModal } from './components/ProductDetailModal';
+import { QuickViewModal } from './components/QuickViewModal';
+import { WishlistModal } from './components/WishlistModal';
+import { AdminPanel } from './components/AdminPanel';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { SearchModal } from './components/SearchModal';
 import { AuthModal } from './components/AuthModal';
 import { BrandStoryModal } from './components/BrandStoryModal';
-import { AdminOrdersModal } from './components/AdminOrdersModal';
-import { PRODUCTS } from './data/products';
+import { CustomerOrdersModal } from './components/CustomerOrdersModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { ProductCategory, Product } from './types';
-import { SlidersHorizontal, ArrowUpDown, Package } from 'lucide-react';
+import { SlidersHorizontal, ArrowUpDown, Package, MessageCircle, X, Check, Filter } from 'lucide-react';
 
 function Storefront() {
-  const { selectedProductForDetail, setSelectedProductForDetail, orders, setIsOwnerOrdersOpen } = useCart();
+  const {
+    selectedProductForDetail,
+    setSelectedProductForDetail,
+    products,
+    isAdminViewOpen,
+    setIsAdminViewOpen
+  } = useCart();
+
   const [activeCategory, setActiveCategory] = useState<ProductCategory>('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
+  const [selectedSizeFilter, setSelectedSizeFilter] = useState<string>('all');
+  const [selectedColorFilter, setSelectedColorFilter] = useState<string>('all');
+  const [maxPricePkr, setMaxPricePkr] = useState<number>(12000);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [isBrandStoryOpen, setIsBrandStoryOpen] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
+  // Check for #admin or /admin in URL and secret shortcut (Ctrl+Shift+A) for Store Owner
+  useEffect(() => {
+    const handleAdminRoute = () => {
+      if (typeof window !== 'undefined') {
+        const isHashAdmin = window.location.hash === '#admin' || window.location.hash.startsWith('#admin');
+        const isPathAdmin = window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin');
+        if (isHashAdmin || isPathAdmin) {
+          setIsAdminViewOpen(true);
+        }
+      }
+    };
+    handleAdminRoute();
+    window.addEventListener('hashchange', handleAdminRoute);
+    window.addEventListener('popstate', handleAdminRoute);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setIsAdminViewOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('hashchange', handleAdminRoute);
+      window.removeEventListener('popstate', handleAdminRoute);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [setIsAdminViewOpen]);
+
+  // Color options extracted dynamically
+  const availableColors = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach((p) => p.colors.forEach((c) => map.set(c.name, c.hex)));
+    return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
+  }, [products]);
 
   // Filtered and sorted products
   const seamlessProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => p.category === 'seamless-leggings');
-  }, []);
+    return products.filter((p) => p.category === 'seamless-leggings');
+  }, [products]);
 
   const lowImpactProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => p.category === 'sports-bras');
-  }, []);
+    return products.filter((p) => p.category === 'sports-bras');
+  }, [products]);
 
-  const bottomsAndMustHaves = useMemo(() => {
-    return PRODUCTS.filter((p) => p.category === 'bottoms' || p.category === 'must-haves');
-  }, []);
-
-  // Filtered list when user activates specific tab in filter bar
-  const displayedCategoryProducts = useMemo(() => {
-    let list = PRODUCTS;
-    if (activeCategory !== 'all') {
-      list = list.filter((p) => p.category === activeCategory);
-    }
-
-    const sorted = [...list];
-    if (sortBy === 'price-asc') {
-      sorted.sort((a, b) => a.usdPrice - b.usdPrice);
-    } else if (sortBy === 'price-desc') {
-      sorted.sort((a, b) => b.usdPrice - a.usdPrice);
-    } else if (sortBy === 'rating') {
-      sorted.sort((a, b) => b.rating - a.rating);
-    }
-    return sorted;
-  }, [activeCategory, sortBy]);
+  // Multi-attribute Filtered list for PLP
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      // Category
+      if (activeCategory !== 'all' && p.category !== activeCategory) return false;
+      // Price
+      if (p.pkrPrice > maxPricePkr) return false;
+      // Size
+      if (selectedSizeFilter !== 'all' && !p.sizes.includes(selectedSizeFilter as any)) return false;
+      // Color
+      if (selectedColorFilter !== 'all' && !p.colors.some((c) => c.name === selectedColorFilter)) return false;
+      // In Stock
+      if (inStockOnly && !p.inStock) return false;
+      return true;
+    }).sort((a, b) => {
+      if (sortBy === 'price-asc') return a.usdPrice - b.usdPrice;
+      if (sortBy === 'price-desc') return b.usdPrice - a.usdPrice;
+      if (sortBy === 'rating') return b.rating - a.rating;
+      return 0;
+    });
+  }, [products, activeCategory, maxPricePkr, selectedSizeFilter, selectedColorFilter, inStockOnly, sortBy]);
 
   const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
+    if (id === 'shop-seamless' || id === 'seamless-leggings') {
+      setActiveCategory('seamless-leggings');
+    } else if (id === 'shop-low-impact' || id === 'sports-bras') {
+      setActiveCategory('sports-bras');
+    } else if (id === 'bottoms') {
+      setActiveCategory('bottoms');
+    } else if (id === 'shop-all' || id === 'all') {
+      setActiveCategory('all');
+    }
+
+    const targetId = (id === 'shop-seamless' || id === 'shop-low-impact' || id === 'bottoms' || id === 'shop-all')
+      ? 'catalog-section'
+      : id;
+
+    const el = document.getElementById(targetId) || document.getElementById('catalog-section');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
+  const hasActiveFilters =
+    activeCategory !== 'all' ||
+    selectedSizeFilter !== 'all' ||
+    selectedColorFilter !== 'all' ||
+    maxPricePkr < 12000 ||
+    inStockOnly;
+
+  const resetAllFilters = () => {
+    setActiveCategory('all');
+    setSelectedSizeFilter('all');
+    setSelectedColorFilter('all');
+    setMaxPricePkr(12000);
+    setInStockOnly(false);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-neutral-900">
+    <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-neutral-900 pb-16 md:pb-0 overflow-x-hidden">
       {/* 1. Global Navigation */}
       <Navbar
         onOpenBrandStory={() => setIsBrandStoryOpen(true)}
@@ -73,157 +157,304 @@ function Storefront() {
       />
 
       <main className="flex-grow">
-        {/* 2. Top Hero matching reference image */}
-        <Hero onShopClick={() => scrollToSection('shop-seamless')} />
+        {/* 2. Top Hero Carousel with Stagger Reveal & Shimmer CTA */}
+        <Hero
+          onShopClick={() => {
+            scrollToSection('catalog-section');
+          }}
+        />
 
-        {/* Category Filter Toolbar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-2 flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
-            <button
-              onClick={() => setActiveCategory('all')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                activeCategory === 'all'
-                  ? 'bg-black text-white'
-                  : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
-              }`}
-            >
-              All Drops
-            </button>
-            <button
-              onClick={() => setActiveCategory('seamless-leggings')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                activeCategory === 'seamless-leggings'
-                  ? 'bg-black text-white'
-                  : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
-              }`}
-            >
-              Seamless Leggings
-            </button>
-            <button
-              onClick={() => setActiveCategory('sports-bras')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                activeCategory === 'sports-bras'
-                  ? 'bg-black text-white'
-                  : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
-              }`}
-            >
-              Sports Bras
-            </button>
-            <button
-              onClick={() => setActiveCategory('bottoms')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                activeCategory === 'bottoms'
-                  ? 'bg-black text-white'
-                  : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
-              }`}
-            >
-              Bottoms & Shorts
-            </button>
-            <button
-              onClick={() => setActiveCategory('must-haves')}
-              className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                activeCategory === 'must-haves'
-                  ? 'bg-black text-white'
-                  : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
-              }`}
-            >
-              Must Haves
-            </button>
-          </div>
+        {/* 3. Featured Categories Row with Hover Zoom */}
+        <FeaturedCategories
+          activeCategory={activeCategory}
+          onSelectCategory={(cat) => {
+            setActiveCategory(cat);
+            scrollToSection('catalog-section');
+          }}
+        />
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-neutral-500 flex items-center gap-1">
-              <ArrowUpDown className="w-3 h-3" /> Sort:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-white border border-neutral-300 px-2.5 py-1.5 text-xs font-semibold focus:outline-hidden focus:border-black cursor-pointer"
-            >
-              <option value="featured">Featured</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="rating">Top Rated</option>
-            </select>
-          </div>
-        </div>
-
-        {/* If user selected a specific filter tab other than 'all', show the filtered gallery */}
-        {activeCategory !== 'all' ? (
-          <section className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
-            <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-black font-display tracking-tight text-neutral-900 uppercase">
-                {activeCategory === 'seamless-leggings' && 'SHOP SEAMLESS LEGGINGS'}
-                {activeCategory === 'sports-bras' && 'SHOP LOW IMPACT SPORTS BRAS'}
-                {activeCategory === 'bottoms' && 'SHOP ATHLETIC BOTTOMS'}
-                {activeCategory === 'must-haves' && 'SHOP MUST HAVES'}
-              </h2>
-              <p className="text-xs text-neutral-500 mt-1">
-                Showing {displayedCategoryProducts.length} items
-              </p>
+        {/* 5. Product Catalog & Filter Toolbar (PLP) */}
+        <div id="shop-seamless" className="relative -top-24" />
+        <div id="catalog-section" className="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-4 scroll-mt-20">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+            {/* Category Navigation Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 sm:pb-0 scrollbar-none flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
+              <button
+                onClick={() => setActiveCategory('all')}
+                className={`px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                  activeCategory === 'all'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
+                }`}
+              >
+                All Drops ({products.length})
+              </button>
+              <button
+                onClick={() => setActiveCategory('seamless-leggings')}
+                className={`px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                  activeCategory === 'seamless-leggings'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
+                }`}
+              >
+                Seamless Leggings
+              </button>
+              <button
+                onClick={() => setActiveCategory('sports-bras')}
+                className={`px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                  activeCategory === 'sports-bras'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
+                }`}
+              >
+                Sports Bras
+              </button>
+              <button
+                onClick={() => setActiveCategory('bottoms')}
+                className={`px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                  activeCategory === 'bottoms'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
+                }`}
+              >
+                Shorts & Bottoms
+              </button>
+              <button
+                onClick={() => setActiveCategory('must-haves')}
+                className={`px-3.5 py-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                  activeCategory === 'must-haves'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-neutral-200 text-neutral-700 hover:border-black'
+                }`}
+              >
+                Must Haves
+              </button>
             </div>
 
+            {/* Filter Toggle & Sort Dropdown */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
+              <button
+                onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+                className={`px-3 py-2 border flex items-center gap-1.5 font-bold uppercase transition-colors cursor-pointer ${
+                  hasActiveFilters ? 'border-black bg-black text-white' : 'border-neutral-300 bg-white text-neutral-800 hover:border-black'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters {hasActiveFilters && '(Active)'}</span>
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-neutral-500 font-bold uppercase text-[11px] hidden sm:inline">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-white border border-neutral-300 px-3 py-2 text-xs font-bold focus:outline-hidden focus:border-black cursor-pointer uppercase"
+                >
+                  <option value="featured">Featured Picks</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="rating">Top Rated</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Expandable Advanced Filter Tray */}
+          {isFilterDrawerOpen && (
+            <div className="bg-white border border-neutral-200 p-4 sm:p-6 my-4 shadow-sm animate-fade-in space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-900">
+                  Filter Activewear By Specifications
+                </h4>
+                {hasActiveFilters && (
+                  <button
+                    onClick={resetAllFilters}
+                    className="text-xs text-red-600 font-bold underline hover:text-red-800 cursor-pointer"
+                  >
+                    Reset All Filters
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 text-xs">
+                {/* 1. Price Range Slider */}
+                <div>
+                  <div className="flex justify-between mb-1.5 font-bold uppercase">
+                    <span>Max Price</span>
+                    <span className="font-mono text-neutral-900">Rs. {maxPricePkr.toLocaleString()}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5000"
+                    max="15000"
+                    step="500"
+                    value={maxPricePkr}
+                    onChange={(e) => setMaxPricePkr(Number(e.target.value))}
+                    className="w-full accent-black cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-neutral-400 mt-1 font-mono">
+                    <span>Rs. 5,000</span>
+                    <span>Rs. 15,000</span>
+                  </div>
+                </div>
+
+                {/* 2. Size Filter */}
+                <div>
+                  <label className="block font-bold uppercase mb-1.5">Size</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['all', 'XS', 'S', 'M', 'L', 'XL'].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSelectedSizeFilter(s)}
+                        className={`px-2.5 py-1 text-xs font-bold uppercase border cursor-pointer ${
+                          selectedSizeFilter === s
+                            ? 'bg-black text-white border-black'
+                            : 'bg-white text-neutral-700 border-neutral-300 hover:border-black'
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Color Filter */}
+                <div>
+                  <label className="block font-bold uppercase mb-1.5">Color</label>
+                  <select
+                    value={selectedColorFilter}
+                    onChange={(e) => setSelectedColorFilter(e.target.value)}
+                    className="w-full p-2 bg-white border border-neutral-300 font-medium cursor-pointer"
+                  >
+                    <option value="all">All Colors</option>
+                    {availableColors.map((c) => (
+                      <option key={c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 4. Availability */}
+                <div>
+                  <label className="block font-bold uppercase mb-1.5">Availability</label>
+                  <label className="flex items-center gap-2 cursor-pointer mt-2 text-neutral-700 font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={inStockOnly}
+                      onChange={(e) => setInStockOnly(e.target.checked)}
+                      className="w-4 h-4 accent-black"
+                    />
+                    <span>In-Stock Items Only</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filter Chips */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2 py-2">
+              <span className="text-[11px] text-neutral-500 font-semibold">Active:</span>
+
+              {activeCategory !== 'all' && (
+                <span className="px-2.5 py-1 bg-neutral-100 text-neutral-800 text-[11px] font-bold uppercase flex items-center gap-1.5 border border-neutral-200">
+                  <span>Category: {activeCategory}</span>
+                  <button onClick={() => setActiveCategory('all')} className="hover:text-red-600 cursor-pointer">×</button>
+                </span>
+              )}
+
+              {selectedSizeFilter !== 'all' && (
+                <span className="px-2.5 py-1 bg-neutral-100 text-neutral-800 text-[11px] font-bold uppercase flex items-center gap-1.5 border border-neutral-200">
+                  <span>Size: {selectedSizeFilter}</span>
+                  <button onClick={() => setSelectedSizeFilter('all')} className="hover:text-red-600 cursor-pointer">×</button>
+                </span>
+              )}
+
+              {selectedColorFilter !== 'all' && (
+                <span className="px-2.5 py-1 bg-neutral-100 text-neutral-800 text-[11px] font-bold uppercase flex items-center gap-1.5 border border-neutral-200">
+                  <span>Color: {selectedColorFilter}</span>
+                  <button onClick={() => setSelectedColorFilter('all')} className="hover:text-red-600 cursor-pointer">×</button>
+                </span>
+              )}
+
+              {maxPricePkr < 12000 && (
+                <span className="px-2.5 py-1 bg-neutral-100 text-neutral-800 text-[11px] font-bold uppercase flex items-center gap-1.5 border border-neutral-200">
+                  <span>Under Rs. {maxPricePkr.toLocaleString()}</span>
+                  <button onClick={() => setMaxPricePkr(12000)} className="hover:text-red-600 cursor-pointer">×</button>
+                </span>
+              )}
+
+              <button
+                onClick={resetAllFilters}
+                className="text-[11px] text-neutral-500 underline hover:text-black ml-1 cursor-pointer"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 6. Product Grid (4 Columns) with Animated Badges */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg sm:text-xl font-black font-display tracking-wider text-neutral-900 uppercase">
+              {activeCategory === 'all' ? 'NEW ARRIVALS & BEST SELLERS' : activeCategory.toUpperCase().replace('-', ' ')}
+            </h2>
+            <span className="text-xs text-neutral-500 font-mono">
+              Showing {filteredProducts.length} items
+            </span>
+          </div>
+
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-16 bg-white border border-neutral-200 space-y-3">
+              <Package className="w-10 h-10 text-neutral-300 mx-auto" />
+              <p className="text-sm font-bold text-neutral-800 uppercase">No activewear matching your filters</p>
+              <button
+                onClick={resetAllFilters}
+                className="px-5 py-2 bg-black text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-              {displayedCategoryProducts.map((product) => (
+              {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-          </section>
-        ) : (
-          /* Default Layout Exactly Matching The Reference Image */
-          <>
-            {/* 3. Section: SHOP SEAMLESS */}
-            <section id="shop-seamless" className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-12">
-              <div className="mb-6">
-                <h2 className="text-lg sm:text-xl font-black font-display tracking-wider text-neutral-900 uppercase">
-                  SHOP SEAMLESS
-                </h2>
-              </div>
+          )}
+        </section>
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                {seamlessProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </section>
+        {/* 7. Mid-Page Split Promo Banner */}
+        <SplitPromoBanner
+          onCategorySelect={(cat) => {
+            setActiveCategory(cat as ProductCategory);
+            scrollToSection('catalog-section');
+          }}
+        />
 
-            {/* 4. Campaign Banner: BRING THE GYM TO YOU. */}
-            <CampaignBanner onShopClick={() => scrollToSection('shop-low-impact')} />
+        {/* 8. Trust Badges & Verified Testimonials Marquee */}
+        <TrustMarquee />
 
-            {/* 5. Section: SHOP LOW IMPACT */}
-            <section id="shop-low-impact" className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-12">
-              <div className="mb-6">
-                <h2 className="text-lg sm:text-xl font-black font-display tracking-wider text-neutral-900 uppercase">
-                  SHOP LOW IMPACT
-                </h2>
-              </div>
+        {/* 9. Campaign Banner: BRING THE GYM TO YOU */}
+        <CampaignBanner onShopClick={() => {
+          setActiveCategory('sports-bras');
+          scrollToSection('catalog-section');
+        }} />
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                {lowImpactProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </section>
-
-            {/* 6. Split Banners: SHOP BOTTOMS & SHOP MUST HAVES */}
-            <SplitPromoBanner
-              onCategorySelect={(cat) => {
-                setActiveCategory(cat as ProductCategory);
-                window.scrollTo({ top: 350, behavior: 'smooth' });
-              }}
-            />
-          </>
-        )}
-
-        {/* 7. Community Reviews & Social Proof */}
+        {/* 10. Community Reviews Section */}
         <ReviewsSection />
+
+        {/* 11. Instagram Social Feed Lookbook */}
+        <SocialFeed />
       </main>
 
-      {/* 8. Comprehensive Footer */}
+      {/* 12. Comprehensive Footer */}
       <Footer
         onCategoryClick={(cat) => {
           setActiveCategory(cat as ProductCategory);
-          window.scrollTo({ top: 350, behavior: 'smooth' });
+          scrollToSection('catalog-section');
         }}
         onOpenBrandStory={() => setIsBrandStoryOpen(true)}
       />
@@ -233,6 +464,8 @@ function Storefront() {
         product={selectedProductForDetail}
         onClose={() => setSelectedProductForDetail(null)}
       />
+      <QuickViewModal />
+      <WishlistModal />
       <CartDrawer />
       <CheckoutModal />
       <SearchModal />
@@ -241,7 +474,24 @@ function Storefront() {
         isOpen={isBrandStoryOpen}
         onClose={() => setIsBrandStoryOpen(false)}
       />
-      <AdminOrdersModal />
+      <CustomerOrdersModal />
+      <AdminPanel />
+      <MobileBottomNav onNavigateSection={scrollToSection} />
+
+      {/* Persistent Floating WhatsApp Quick Support (Always Accessible on Mobile & Desktop) */}
+      <aside aria-label="Support chat" className="fixed bottom-18 sm:bottom-6 right-3 sm:right-6 z-30">
+        <a
+          href="https://wa.me/923113270742?text=Assalam-o-Alaikum!%20I%20have%20an%20inquiry%20regarding%20ICON%20Activewear."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full shadow-2xl flex items-center gap-2 border border-emerald-400/40 text-xs font-bold transition-all cursor-pointer hover:shadow-emerald-900/30"
+          title="Chat with WhatsApp Support"
+        >
+          <MessageCircle className="w-4 h-4 fill-white text-white shrink-0" />
+          <span className="hidden sm:inline font-bold">0311-3270742</span>
+          <span className="sm:hidden font-bold">WhatsApp</span>
+        </a>
+      </aside>
     </div>
   );
 }

@@ -11,7 +11,7 @@ export const PRODUCTS: Product[] = [
     pkrPrice: 8046.40,
     originalPriceUsd: 36.00,
     originalPricePkr: 10000.00,
-    image: '/src/assets/images/product_seamless_leggings_1790852268334.jpg',
+    image: '/images/product_seamless_leggings_1790852268334.jpg',
     hoverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
     colors: [
       { name: 'Olive Heather', hex: '#636b57' },
@@ -47,7 +47,7 @@ export const PRODUCTS: Product[] = [
     originalPriceUsd: 40.00,
     originalPricePkr: 11000.00,
     image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=800&q=80',
-    hoverImage: '/src/assets/images/product_seamless_leggings_1790852268334.jpg',
+    hoverImage: '/images/product_seamless_leggings_1790852268334.jpg',
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Forest Moss', hex: '#2f3e30' },
@@ -110,7 +110,7 @@ export const PRODUCTS: Product[] = [
     originalPriceUsd: 34.00,
     originalPricePkr: 9500.00,
     image: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=800&q=80',
-    hoverImage: '/src/assets/images/product_seamless_leggings_1790852268334.jpg',
+    hoverImage: '/images/product_seamless_leggings_1790852268334.jpg',
     colors: [
       { name: 'Midnight Navy', hex: '#1c2833' },
       { name: 'Jet Black', hex: '#0a0a0a' },
@@ -141,7 +141,7 @@ export const PRODUCTS: Product[] = [
     pkrPrice: 6676.80,
     originalPriceUsd: 30.00,
     originalPricePkr: 8300.00,
-    image: '/src/assets/images/product_sports_bra_1790852283602.jpg',
+    image: '/images/product_sports_bra_1790852283602.jpg',
     hoverImage: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=800&q=80',
     colors: [
       { name: 'Crisp White', hex: '#fcfcfc' },
@@ -175,7 +175,7 @@ export const PRODUCTS: Product[] = [
     originalPriceUsd: 28.00,
     originalPricePkr: 7700.00,
     image: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=800&q=80',
-    hoverImage: '/src/assets/images/product_sports_bra_1790852283602.jpg',
+    hoverImage: '/images/product_sports_bra_1790852283602.jpg',
     colors: [
       { name: 'Heather Grey', hex: '#777b80' },
       { name: 'Dusty Rose', hex: '#bf8e93' },
@@ -205,7 +205,7 @@ export const PRODUCTS: Product[] = [
     usdPrice: 24.00,
     pkrPrice: 6676.80,
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
-    hoverImage: '/src/assets/images/product_sports_bra_1790852283602.jpg',
+    hoverImage: '/images/product_sports_bra_1790852283602.jpg',
     colors: [
       { name: 'Granite Marble', hex: '#949599' },
       { name: 'Chalk White', hex: '#f2f2f0' },
@@ -236,7 +236,7 @@ export const PRODUCTS: Product[] = [
     originalPriceUsd: 32.00,
     originalPricePkr: 8900.00,
     image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=800&q=80',
-    hoverImage: '/src/assets/images/product_sports_bra_1790852283602.jpg',
+    hoverImage: '/images/product_sports_bra_1790852283602.jpg',
     colors: [
       { name: 'Pure White', hex: '#ffffff' },
       { name: 'Sunset Coral', hex: '#de6857' },
@@ -268,7 +268,7 @@ export const PRODUCTS: Product[] = [
     pkrPrice: 5490.00,
     originalPriceUsd: 26.00,
     originalPricePkr: 7200.00,
-    image: '/src/assets/images/promo_split_bottoms_1790852297885.jpg',
+    image: '/images/promo_split_bottoms_1790852297885.jpg',
     hoverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
     colors: [
       { name: 'Sky Cerulean', hex: '#77a2c7' },
@@ -299,8 +299,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'SHOP MUST HAVES',
     usdPrice: 17.50,
     pkrPrice: 4890.00,
-    image: '/src/assets/images/hero_pink_activewear_1790852235638.jpg',
-    hoverImage: '/src/assets/images/campaign_dark_fitness_1790852253184.jpg',
+    image: '/images/hero_pink_activewear_1790852235638.jpg',
+    hoverImage: '/images/campaign_dark_fitness_1790852253184.jpg',
     colors: [
       { name: 'Blush Coral', hex: '#e89e99' },
       { name: 'Chalk White', hex: '#f7f6f2' },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, ShieldCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -28,6 +28,41 @@ export const CartDrawer: React.FC = () => {
   const [promoInput, setPromoInput] = useState('');
   const [promoMessage, setPromoMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Outside click listener for drawer content
+  useEffect(() => {
+    if (!isCartOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+        setIsCartOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isCartOpen, setIsCartOpen]);
+
+  // Escape key listener
+  useEffect(() => {
+    if (!isCartOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCartOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCartOpen, setIsCartOpen]);
+
   if (!isCartOpen) return null;
 
   const handleApplyPromo = (e: React.FormEvent) => {
@@ -54,7 +89,7 @@ export const CartDrawer: React.FC = () => {
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col border-l border-neutral-200">
+        <div ref={drawerRef} className="w-screen max-w-md bg-white shadow-2xl flex flex-col border-l border-neutral-200">
           {/* Header */}
           <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between bg-[#FAF9F8]">
             <div className="flex items-center gap-2">

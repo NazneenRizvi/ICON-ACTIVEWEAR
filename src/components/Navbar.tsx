@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Search, ShoppingBag, User as UserIcon, Mail, ChevronDown, Menu, X, Instagram, Facebook, Share2, Package, MessageCircle, Crown } from 'lucide-react';
+import { Search, ShoppingBag, User as UserIcon, ChevronDown, Menu, X, Instagram, Facebook, Share2, Heart, Sliders } from 'lucide-react';
 import { useCurrency, CurrencyCode, CURRENCIES } from '../context/CurrencyContext';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { STORE_OWNER_EMAIL } from '../config';
+import { UserDropdown } from './UserDropdown';
 
 interface NavbarProps {
   onOpenBrandStory?: () => void;
@@ -11,11 +13,21 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSection }) => {
   const { currency, setCurrency, currentCurrencyDetails } = useCurrency();
-  const { totalItemsCount, setIsCartOpen, setIsSearchOpen, setIsOwnerOrdersOpen, orders, ownerEmail, ownerWhatsApp } = useCart();
-  const { user, isAuthenticated, isOwner, openAuthModal, logout } = useAuth();
+  const {
+    totalItemsCount,
+    setIsCartOpen,
+    setIsSearchOpen,
+    setIsCustomerOrdersOpen,
+    isWishlistOpen,
+    setIsWishlistOpen,
+    wishlist,
+    setIsAdminViewOpen
+  } = useCart();
+  const { user, isAuthenticated, openAuthModal, logout } = useAuth();
+
+  const isStoreOwner = !!user && user.email?.toLowerCase().trim() === STORE_OWNER_EMAIL.toLowerCase().trim();
 
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavClick = (sectionId: string) => {
@@ -46,28 +58,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
         </div>
       </div>
 
-      {/* 2. Upper Utility Bar with Nazneen's details */}
+      {/* 2. Upper Utility Bar */}
       <div className="border-b border-neutral-100 bg-[#FAF9F8] px-4 sm:px-8 py-1.5 text-xs text-neutral-600 hidden md:flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <a
-            href={`mailto:${ownerEmail}?subject=ICON%20Activewear%20Inquiry`}
-            className="flex items-center gap-1.5 hover:text-black transition-colors font-medium"
-            title="Send Email to Nazneen"
-          >
-            <Mail className="w-3.5 h-3.5 text-neutral-500" />
-            <span>{ownerEmail}</span>
-          </a>
-
-          <a
-            href="https://wa.me/923113270742?text=Assalam-o-Alaikum!%20I%20have%20an%20inquiry%20regarding%20ICON%20Activewear."
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 text-emerald-700 font-bold hover:underline transition-colors pl-3 border-l border-neutral-200"
-            title="Chat with WhatsApp Support"
-          >
-            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Karachi HQ & WhatsApp: 0311-3270742</span>
-          </a>
+        <div className="flex items-center gap-2 text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
+          <span>Official Premium Activewear Brand · Karachi</span>
         </div>
 
         <div className="flex items-center gap-6">
@@ -103,76 +97,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
             )}
           </div>
 
-          {/* User Account / Auth */}
-          <div className="relative">
-            {isAuthenticated ? (
-              <div>
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className={`flex items-center gap-1.5 transition-colors font-bold text-xs cursor-pointer ${
-                    isOwner ? 'text-black bg-amber-50 border border-amber-300 px-2 py-0.5' : 'hover:text-black text-neutral-800'
-                  }`}
-                >
-                  {isOwner ? (
-                    <Crown className="w-3.5 h-3.5 text-amber-600" />
-                  ) : (
-                    <UserIcon className="w-3.5 h-3.5" />
-                  )}
-                  <span className="truncate max-w-[130px]">
-                    {isOwner ? '👑 Nazneen (Owner)' : `Hi, ${user?.name.split(' ')[0]}`}
-                  </span>
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-1 w-52 bg-white border border-neutral-200 shadow-xl z-50 py-1 text-left">
-                    <div className={`px-3 py-2 border-b border-neutral-100 ${isOwner ? 'bg-neutral-900 text-white' : 'bg-neutral-50'}`}>
-                      <div className="flex items-center gap-1">
-                        {isOwner && <Crown className="w-3 h-3 text-amber-400" />}
-                        <p className={`font-bold text-xs truncate ${isOwner ? 'text-white' : 'text-neutral-900'}`}>{user?.name}</p>
-                      </div>
-                      <p className={`text-[10px] truncate ${isOwner ? 'text-neutral-400' : 'text-neutral-500'}`}>{user?.email}</p>
-                    </div>
-
-                    {isOwner && (
-                      <button
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          setIsOwnerOrdersOpen(true);
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-xs font-black text-white bg-black hover:bg-neutral-800 transition-colors flex items-center justify-between cursor-pointer border-b border-neutral-200"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <Package className="w-3.5 h-3.5 text-amber-400" />
-                          <span>ORDERS DASHBOARD</span>
-                        </span>
-                        <span className="bg-amber-400 text-black text-[10px] font-black px-1.5 py-0.2 rounded-full">
-                          {orders.length}
-                        </span>
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        logout();
-                      }}
-                      className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={() => openAuthModal('login')}
-                className="hover:text-black transition-colors font-medium flex items-center gap-1 cursor-pointer"
-              >
-                <span>My Account</span>
-              </button>
-            )}
-          </div>
+          {/* User Account / Auth Dropdown with Outside-Click Handler */}
+          <UserDropdown variant="top-bar" />
 
           {/* Social Icons */}
           <div className="flex items-center gap-3 pl-3 border-l border-neutral-200 text-neutral-500">
@@ -208,11 +134,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
       </div>
 
       {/* 3. Main Brand Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-8 py-3 sm:py-3.5 flex items-center justify-between gap-2">
         {/* Mobile menu hamburger */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-1.5 text-neutral-800 hover:text-black"
+          className="md:hidden p-1.5 text-neutral-800 hover:text-black shrink-0"
           aria-label="Toggle mobile menu"
         >
           {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -221,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
         {/* Brand Logo: ICON ACTIVEWEAR */}
         <a
           href="#"
-          className="text-xl sm:text-2xl font-black tracking-widest font-display text-neutral-900 uppercase flex items-center gap-2"
+          className="text-base sm:text-xl md:text-2xl font-black tracking-wider sm:tracking-widest font-display text-neutral-900 uppercase truncate"
         >
           <span>ICON ACTIVEWEAR</span>
         </a>
@@ -229,8 +155,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
         {/* Desktop Nav Links */}
         <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold tracking-wider uppercase text-neutral-800">
           <button
-            onClick={() => handleNavClick('shop-seamless')}
-            className="hover:text-black relative py-1 transition-colors group"
+            onClick={() => handleNavClick('catalog-section')}
+            className="hover:text-black relative py-1 transition-colors group cursor-pointer"
           >
             SHOP
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all duration-200 group-hover:w-full"></span>
@@ -243,50 +169,47 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
                 handleNavClick('brand-story');
               }
             }}
-            className="hover:text-black relative py-1 transition-colors group"
+            className="hover:text-black relative py-1 transition-colors group cursor-pointer"
           >
             OUR BRAND
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all duration-200 group-hover:w-full"></span>
           </button>
           <button
-            onClick={() => handleNavClick('reviews-section')}
-            className="hover:text-black relative py-1 transition-colors group"
+            onClick={() => handleNavClick('contact')}
+            className="hover:text-black relative py-1 transition-colors group cursor-pointer"
           >
-            REVIEWS
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all duration-200 group-hover:w-full"></span>
-          </button>
-          <button
-            onClick={() => handleNavClick('community-guarantee')}
-            className="hover:text-black relative py-1 transition-colors group"
-          >
-            COMMUNITY
+            CONTACT
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all duration-200 group-hover:w-full"></span>
           </button>
         </nav>
 
-        {/* Right Action Icons: Search & Cart */}
-        <div className="flex items-center gap-4">
+        {/* Right Action Icons: Search, Wishlist, User, Cart */}
+        <div className="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="p-1.5 text-neutral-700 hover:text-black transition-colors"
+            className="p-1.5 text-neutral-700 hover:text-black transition-colors cursor-pointer"
             aria-label="Search activewear"
           >
             <Search className="w-5 h-5" />
           </button>
 
+          {/* Wishlist Button */}
           <button
-            onClick={() => {
-              if (isAuthenticated) {
-                setIsUserMenuOpen(!isUserMenuOpen);
-              } else {
-                openAuthModal('login');
-              }
-            }}
-            className="p-1.5 text-neutral-700 hover:text-black transition-colors md:hidden"
-            aria-label="User account"
+            onClick={() => setIsWishlistOpen(true)}
+            className="p-1.5 text-neutral-700 hover:text-black transition-colors relative flex items-center cursor-pointer"
+            aria-label="Saved Wishlist"
+            title="My Saved Wishlist"
           >
-            <UserIcon className="w-5 h-5" />
+            <Heart className="w-5 h-5" />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-1 -right-1.5 bg-red-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-scale-in">
+                {wishlist.length}
+              </span>
+            )}
           </button>
+
+          {/* Mobile User Icon Dropdown with Outside-Click Handler */}
+          <UserDropdown variant="icon" className="md:hidden" />
 
           {/* Cart Bag Icon with dynamic counter badge */}
           <button
@@ -304,119 +227,163 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBrandStory, onNavigateSect
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Slide-Over Drawer with Backdrop */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-neutral-200 bg-white px-6 py-6 space-y-4">
-          <div className="flex flex-col space-y-3 text-sm font-bold tracking-wider uppercase text-neutral-900">
-            <button
-              onClick={() => handleNavClick('shop-seamless')}
-              className="text-left py-2 border-b border-neutral-100"
-            >
-              Shop Seamless
-            </button>
-            <button
-              onClick={() => handleNavClick('shop-low-impact')}
-              className="text-left py-2 border-b border-neutral-100"
-            >
-              Shop Sports Bras
-            </button>
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                if (onOpenBrandStory) onOpenBrandStory();
-              }}
-              className="text-left py-2 border-b border-neutral-100"
-            >
-              Our Brand
-            </button>
-            <button
-              onClick={() => handleNavClick('reviews-section')}
-              className="text-left py-2 border-b border-neutral-100"
-            >
-              Reviews
-            </button>
+        <div className="md:hidden fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
 
-            {/* Mobile Account / Owner Dashboard Action */}
-            {isAuthenticated ? (
-              <div className="pt-2 border-b border-neutral-100 pb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-500 font-medium">
-                    {isOwner ? '👑 Nazneen (Store Owner)' : `Hi, ${user?.name}`}
-                  </span>
+          <div className="fixed inset-y-0 left-0 max-w-[310px] w-full bg-white shadow-2xl flex flex-col z-10 animate-fade-in overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-[#111111] text-white">
+              <div>
+                <span className="text-xs font-black tracking-widest uppercase font-display block">
+                  ICON ACTIVEWEAR
+                </span>
+                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+                  Karachi Flagship Store
+                </span>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="p-5 flex-1 space-y-4">
+              <div className="flex flex-col space-y-2 text-xs font-black tracking-wider uppercase text-neutral-900">
+                <button
+                  onClick={() => handleNavClick('shop-seamless')}
+                  className="text-left py-2.5 px-2 hover:bg-neutral-100 rounded-sm border-b border-neutral-100 transition-colors flex items-center justify-between"
+                >
+                  <span>Seamless Leggings</span>
+                  <span className="text-[10px] text-neutral-400 font-mono">01</span>
+                </button>
+                <button
+                  onClick={() => handleNavClick('shop-low-impact')}
+                  className="text-left py-2.5 px-2 hover:bg-neutral-100 rounded-sm border-b border-neutral-100 transition-colors flex items-center justify-between"
+                >
+                  <span>Sports Bras</span>
+                  <span className="text-[10px] text-neutral-400 font-mono">02</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (onOpenBrandStory) onOpenBrandStory();
+                  }}
+                  className="text-left py-2.5 px-2 hover:bg-neutral-100 rounded-sm border-b border-neutral-100 transition-colors flex items-center justify-between"
+                >
+                  <span>Our Brand Story</span>
+                  <span className="text-[10px] text-neutral-400 font-mono">03</span>
+                </button>
+                <button
+                  onClick={() => handleNavClick('contact')}
+                  className="text-left py-2.5 px-2 hover:bg-neutral-100 rounded-sm border-b border-neutral-100 transition-colors flex items-center justify-between"
+                >
+                  <span>Contact & WhatsApp</span>
+                  <span className="text-[10px] text-neutral-400 font-mono">04</span>
+                </button>
+              </div>
+
+              {/* Account Actions in Mobile Drawer */}
+              <div className="pt-2 border-t border-neutral-200">
+                {isAuthenticated ? (
+                  <div className="space-y-2">
+                    <div className="p-2.5 bg-neutral-100 rounded-sm flex items-center justify-between">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-neutral-900 truncate">
+                          {user?.name}
+                        </p>
+                        <p className="text-[10px] text-neutral-500 truncate">{user?.email}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          logout();
+                        }}
+                        className="text-[11px] text-red-600 font-bold underline shrink-0 cursor-pointer ml-2"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsCustomerOrdersOpen(true);
+                      }}
+                      className="w-full py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-neutral-300" />
+                      <span>My Order History</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsWishlistOpen(true);
+                      }}
+                      className="w-full py-2 bg-white border border-neutral-300 text-neutral-800 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <Heart className="w-4 h-4 text-red-500" />
+                      <span>Saved Wishlist ({wishlist.length})</span>
+                    </button>
+
+                    {isStoreOwner && (
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setIsAdminViewOpen(true);
+                        }}
+                        className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <Sliders className="w-3.5 h-3.5 text-neutral-700" />
+                        <span>Admin Portal</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
-                      logout();
+                      openAuthModal('login');
                     }}
-                    className="text-xs text-red-600 font-bold underline"
+                    className="w-full py-3 bg-black text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
-                    Sign Out
-                  </button>
-                </div>
-                {isOwner && (
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setIsOwnerOrdersOpen(true);
-                    }}
-                    className="mt-2 w-full py-2.5 bg-black text-amber-300 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-neutral-800"
-                  >
-                    <Package className="w-4 h-4 text-amber-400" />
-                    <span>OPEN ORDERS DASHBOARD ({orders.length})</span>
+                    <UserIcon className="w-4 h-4" />
+                    <span>Customer Sign In / Join</span>
                   </button>
                 )}
               </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  openAuthModal('login');
-                }}
-                className="text-left py-2 border-b border-neutral-100 flex items-center gap-1.5"
-              >
-                <UserIcon className="w-4 h-4" />
-                <span>My Account / Login</span>
-              </button>
-            )}
-          </div>
 
-          {/* Direct Support links on Mobile */}
-          <div className="pt-2 space-y-2 text-xs">
-            <a
-              href="https://wa.me/923113270742?text=Assalam-o-Alaikum!%20I%20have%20an%20inquiry%20regarding%20ICON%20Activewear."
-              target="_blank"
-              rel="noreferrer"
-              className="w-full py-2 px-3 bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold flex items-center gap-2"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-              <span>WhatsApp: 0311-3270742</span>
-            </a>
-            <a
-              href={`mailto:${ownerEmail}?subject=ICON%20Activewear%20Inquiry`}
-              className="w-full py-2 px-3 bg-neutral-50 text-neutral-700 border border-neutral-200 font-medium flex items-center gap-2"
-            >
-              <Mail className="w-4 h-4 text-neutral-500" />
-              <span>{ownerEmail}</span>
-            </a>
-          </div>
-
-          {/* Currency selection on mobile */}
-          <div className="pt-2 border-t border-neutral-200">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Currency</p>
-            <div className="grid grid-cols-3 gap-2">
-              {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
-                <button
-                  key={code}
-                  onClick={() => setCurrency(code)}
-                  className={`px-2 py-1.5 text-xs text-center border ${
-                    currency === code
-                      ? 'border-black bg-black text-white font-bold'
-                      : 'border-neutral-300 text-neutral-700'
-                  }`}
-                >
-                  {code} ({CURRENCIES[code].symbol})
-                </button>
-              ))}
+              {/* Currency selection on mobile */}
+              <div className="pt-2 border-t border-neutral-200">
+                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">
+                  Select Currency
+                </p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
+                    <button
+                      key={code}
+                      onClick={() => setCurrency(code)}
+                      className={`px-2 py-1.5 text-xs text-center border cursor-pointer ${
+                        currency === code
+                          ? 'border-black bg-black text-white font-bold'
+                          : 'border-neutral-300 text-neutral-700 hover:border-black'
+                      }`}
+                    >
+                      {code} ({CURRENCIES[code].symbol})
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

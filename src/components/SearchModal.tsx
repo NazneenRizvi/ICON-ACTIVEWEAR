@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { useCart } from '../context/CartContext';
@@ -9,6 +9,41 @@ export const SearchModal: React.FC = () => {
   const { isSearchOpen, setIsSearchOpen, setSelectedProductForDetail } = useCart();
   const { formatPrice } = useCurrency();
   const [query, setQuery] = useState('');
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside the modal content area
+  useEffect(() => {
+    if (!isSearchOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isSearchOpen, setIsSearchOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isSearchOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen, setIsSearchOpen]);
 
   const filteredProducts = useMemo(() => {
     if (!query.trim()) return [];
@@ -38,8 +73,15 @@ export const SearchModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-start justify-center pt-16 sm:pt-24 px-4 animate-fade-in">
-      <div className="relative bg-white w-full max-w-2xl rounded-none shadow-2xl border border-neutral-200 overflow-hidden">
+    <div
+      onClick={() => setIsSearchOpen(false)}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-start justify-center pt-16 sm:pt-24 px-4 animate-fade-in"
+    >
+      <div
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+        className="relative bg-white w-full max-w-2xl rounded-none shadow-2xl border border-neutral-200 overflow-hidden"
+      >
         {/* Search Input Bar */}
         <div className="flex items-center px-4 py-3.5 border-b border-neutral-200 gap-3">
           <Search className="w-5 h-5 text-neutral-400" />

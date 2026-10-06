@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ArrowRight, Check, Mail, ShieldCheck, Heart, Lock, MessageCircle } from 'lucide-react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { STORE_OWNER_EMAIL, STORE_OWNER_CONFIG } from '../config';
 
 interface FooterProps {
   onCategoryClick?: (category: string) => void;
@@ -10,19 +12,34 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onCategoryClick, onOpenBrandStory }) => {
   const { currentCurrencyDetails } = useCurrency();
-  const { setIsOwnerOrdersOpen } = useCart();
+  const { setIsAdminViewOpen } = useCart();
+  const { user } = useAuth();
+  const isStoreOwner = !!user && user.email?.toLowerCase().trim() === STORE_OWNER_EMAIL.toLowerCase().trim();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !email.includes('@')) return;
-    setSubscribed(true);
-    setEmail('');
+    setSubscribing(true);
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const existing = localStorage.getItem('fj_subscribers');
+        const parsed = existing ? JSON.parse(existing) : [];
+        if (!parsed.includes(email.trim())) {
+          localStorage.setItem('fj_subscribers', JSON.stringify([...parsed, email.trim()]));
+        }
+      }
+      setSubscribed(true);
+      setSubscribing(false);
+      setEmail('');
+    }, 400);
   };
 
   return (
-    <footer id="community-guarantee" className="w-full bg-[#111111] text-white border-t border-neutral-800">
+    <footer id="contact" className="w-full bg-[#111111] text-white border-t border-neutral-800 scroll-mt-10">
+      <div id="contact-section" />
       {/* 1. Value Props Strip */}
       <div className="border-b border-neutral-800 py-8 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center sm:text-left">
@@ -234,7 +251,15 @@ export const Footer: React.FC<FooterProps> = ({ onCategoryClick, onOpenBrandStor
           <div className="flex items-center gap-6">
             <span className="hover:text-neutral-400 cursor-pointer">Privacy Policy</span>
             <span className="hover:text-neutral-400 cursor-pointer">Terms of Service</span>
-            <span className="hover:text-neutral-400 cursor-pointer">Cookie Preferences</span>
+            {isStoreOwner && (
+              <button
+                onClick={() => setIsAdminViewOpen(true)}
+                className="hover:text-amber-400 text-neutral-500 transition-colors cursor-pointer flex items-center gap-1 font-mono text-[10px]"
+                title="Store Owner Portal"
+              >
+                <span>⚙ Admin Portal</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
